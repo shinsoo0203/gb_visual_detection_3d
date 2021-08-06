@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_conversions
   roslint
 )
+find_package(PCL 1.2 REQUIRED)
 
 catkin_package(
   CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
