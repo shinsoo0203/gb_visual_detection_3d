@@ -1,7 +1,7 @@
 darknet_ros_topic: /darknet_ros/bounding_boxes
 output_bbx3d_topic: /darknet_ros_3d/bounding_boxes
 point_cloud_topic: /zed2/zed_node/point_cloud/cloud_registered
-working_frame: base_link
+working_frame: zed2_left_camera_frame
 mininum_detection_thereshold: 0.7
 minimum_probability: 0.7
 interested_classes: ["person", "bicycle", "motorbike", "bus", "truck", "car"]
