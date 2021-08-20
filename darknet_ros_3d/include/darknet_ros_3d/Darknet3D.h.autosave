@@ -74,8 +74,8 @@ private:
   ros::Subscriber yolo_sub_, pointCloud_sub_;
   ros::Publisher darknet3d_pub_, markers_pub_;
 
-  // darknet msgs
-  ros::Publisher darknet3d_pub_bbox, markers_pub_bbox;
+  // darknet_msgs
+  ros::Publisher darknet3d_pub, markers_pub;
 
   tf::TransformListener tfListener_;
 

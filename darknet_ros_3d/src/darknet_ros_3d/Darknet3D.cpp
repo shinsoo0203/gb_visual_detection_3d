@@ -58,6 +58,10 @@ Darknet3D::Darknet3D():
   darknet3d_pub_ = nh_.advertise<gb_visual_detection_3d_msgs::BoundingBoxes3d>(output_bbx3d_topic_, 100);
   markers_pub_ = nh_.advertise<visualization_msgs::MarkerArray>("/darknet_ros_3d/markers", 100);
 
+  // darknet_msgs
+  darknet3d_pub = nh_.advertise<darknet_ros_msgs::BoundingBoxes3d>(output_bbox3d_topic, 100);
+  marker_pub = nh_.advertise<visualization_msgs::MarkerArray>("/darknet_ros/3d_markers")
+
   yolo_sub_ = nh_.subscribe(input_bbx_topic_, 1, &Darknet3D::darknetCb, this);
   pointCloud_sub_ = nh_.subscribe(pointcloud_topic_, 1, &Darknet3D::pointCloudCb, this);
 
@@ -69,13 +73,21 @@ Darknet3D::initParams()
 {
   input_bbx_topic_ = "/darknet_ros/bounding_boxes";
   output_bbx3d_topic_ = "/darknet_ros_3d/bounding_boxes";
+
+  // darknet_msgs
+  output_bbox3d_topic = "/darknet_ros/3d_bounding_boxes";
+
   pointcloud_topic_ = "/camera/depth_registered/points";
   working_frame_ = "/camera_link";
   mininum_detection_thereshold_ = 0.5f;
   minimum_probability_ = 0.3f;
 
   nh_.param("darknet_ros_topic", input_bbx_topic_, input_bbx_topic_);
-  nh_.param("output_bbx3d_topic", output_bbx3d_topic_, output_bbx3d_topic_);
+ // nh_.param("output_bbx3d_topic", output_bbx3d_topic_, output_bbx3d_topic_);
+
+  // darknet_msgs
+  nh_.param("output_bbx3d_topic", output_bbox3d_topic, output_bbox3d_topic);
+
   nh_.param("point_cloud_topic", pointcloud_topic_, pointcloud_topic_);
   nh_.param("working_frame", working_frame_, working_frame_);
   nh_.param("mininum_detection_thereshold", mininum_detection_thereshold_, mininum_detection_thereshold_);
@@ -97,9 +109,13 @@ Darknet3D::darknetCb(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg)
 }
 
 void
+//Darknet3D::calculate_boxes(const sensor_msgs::PointCloud2& cloud_pc2,
+//    const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud_pcl,
+//    gb_visual_detection_3d_msgs::BoundingBoxes3d* boxes)
+// darknet_msgs
 Darknet3D::calculate_boxes(const sensor_msgs::PointCloud2& cloud_pc2,
     const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud_pcl,
-    gb_visual_detection_3d_msgs::BoundingBoxes3d* boxes)
+    darknet_ros_msgs::BoundingBoxes3d* boxes)
 {
   boxes->header.stamp = cloud_pc2.header.stamp;
   boxes->header.frame_id = working_frame_;
@@ -148,15 +164,24 @@ Darknet3D::calculate_boxes(const sensor_msgs::PointCloud2& cloud_pc2,
         minz = std::min(point.z, minz);
       }
 
-    gb_visual_detection_3d_msgs::BoundingBox3d bbx_msg;
+//    gb_visual_detection_3d_msgs::BoundingBox3d bbx_msg;
+//    bbx_msg.Class = bbx.Class;
+//    bbx_msg.probability = bbx.probability;
+//    bbx_msg.xmin = minx;
+//    bbx_msg.xmax = maxx;
+//    bbx_msg.ymin = miny;
+//    bbx_msg.ymax = maxy;
+//    bbx_msg.zmin = minz;
+//    bbx_msg.zmax = maxz;
+
+    // darknet_msgs
+    darknet_ros_msgs::BoundingBox3d bbox_msg;
     bbx_msg.Class = bbx.Class;
     bbx_msg.probability = bbx.probability;
     bbx_msg.xmin = minx;
     bbx_msg.xmax = maxx;
     bbx_msg.ymin = miny;
     bbx_msg.ymax = maxy;
-    bbx_msg.zmin = minz;
-    bbx_msg.zmax = maxz;
 
     boxes->bounding_boxes.push_back(bbx_msg);
   }
@@ -168,8 +193,13 @@ Darknet3D::update()
   if ((ros::Time::now() - last_detection_ts_).toSec() > 2.0)
     return;
 
-  if ((darknet3d_pub_.getNumSubscribers() == 0) &&
-      (markers_pub_.getNumSubscribers() == 0))
+//  if ((darknet3d_pub_.getNumSubscribers() == 0) &&
+//      (markers_pub_.getNumSubscribers() == 0))
+//    return;
+
+  // darknet_ros
+  if ((darknet3d_pub.getNumSubscribers() == 0) &&
+      (markers_pub.getNumSubscribers() == 0))
     return;
 
   sensor_msgs::PointCloud2 local_pointcloud;
@@ -187,13 +217,22 @@ Darknet3D::update()
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcrgb(new pcl::PointCloud<pcl::PointXYZRGB>);
   pcl::fromROSMsg(local_pointcloud, *pcrgb);
 
-  gb_visual_detection_3d_msgs::BoundingBoxes3d msg;
+//  gb_visual_detection_3d_msgs::BoundingBoxes3d msg;
+
+//  calculate_boxes(local_pointcloud, pcrgb, &msg);
+
+//  darknet3d_pub_.publish(msg);
+
+  // darknet_ros
+  darknet_ros_msgs::BoundingBoxes3d msg;
 
   calculate_boxes(local_pointcloud, pcrgb, &msg);
 
-  darknet3d_pub_.publish(msg);
+  darknet3d_pub.publish(msg);
 
   publish_markers(msg);
+
+
 }
 
 void
